@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>間違いさがしゲーム</title>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:title" content="株式会社X-HACK" />
+    <meta property="og:description" content="間違い探しゲームです" />
+    <meta
+      property="og:image"
+      content="https://js-hack.s3-ap-northeast-1.amazonaws.com/%E9%96%93%E9%81%95%E3%81%84+%E3%81%95%E3%81%8B%E3%82%99%E3%81%97.png"
+    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <div class="center">
+      <h1 class="center">間違い探し</h1>
+      <h4>一つだけトイプードルが紛れています</h4>
+      <p id="timer"></p>
+      <button id="start">スタート</button>
+      <span id="question"></span>
+    </div>
+    <div id="app" class="canvas_wrap">
+      <canvas
+        id="canvas"
+        class="center"
+        width="360"
+        height="360"
+        style="background-color: darkslategrey"
+      ></canvas>
+    </div>
+    <div id="message"></div>
+    <p id="ngcount"></p>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      // マジックナンバーは定数として定義しておく(なんのための数字か変数名で理解できるようにするため)
+      const MAX_COLUMN = 3;
+      const IMAGE_WIDTH = 120;
+      let ngImagePosition = {
+        x1: null,
+        x2: null,
+        y1: null,
+        y2: null,
+      }
+      const message = document.getElementById('message');
+      const timer = document.getElementById('timer');
+      const start = document.getElementById('start');
+      const question = document.getElementById('question');
+      let drawCount = 0;
+      let timerCount = 3;
+      let timer1;
+      let timer2;
+
+      function cntStart(){
+        timer1=setInterval(function(){
+          countDown();
+          if (timerCount===0){
+            draw();
+            clearInterval(timer1);
+            timerCount += 3;
+            timer.innerText = timerCount;
+          }
+        },1000);
+      }
+
+      function countDown(){
+        timerCount-=1;
+        timer.innerText = timerCount;
+      }
+
+      function drawImage(x, y, srcUrl) {
+        // img 要素を生成
+        const img = new Image();
+        img.src = srcUrl;
+        img.onload = function () {
+          ctx.drawImage(img, x, y, IMAGE_WIDTH, IMAGE_WIDTH);
+        };
+      }
+
+      function draw(){
+        let counter = 1
+        let randomNumber = 1+Math.floor(Math.random() * 8)
+        for(let i=0;i<MAX_COLUMN;i++){
+          for(let j=0;j<MAX_COLUMN;j++){
+            if(counter === randomNumber){
+               let randomNumber = 1+Math.floor(Math.random()*2)
+                drawImage(IMAGE_WIDTH * i, IMAGE_WIDTH * j, `./image/トイプードル${randomNumber}.jpeg`)
+              // 正解の画像の位置を記憶しておく・・・
+              ngImagePosition.x1 = IMAGE_WIDTH * i
+              ngImagePosition.x2 = IMAGE_WIDTH * i + 120
+              ngImagePosition.y1 = IMAGE_WIDTH * j
+              ngImagePosition.y2 = IMAGE_WIDTH * j + 120
+            }else{
+              let counter = 1+Math.floor(Math.random() * 12)
+              drawImage(IMAGE_WIDTH * i, IMAGE_WIDTH * j, `./image/唐揚げ${counter}.jpeg`)
+            }
+            counter += 1
+          }
+        }
+      }
+
+      timer.innerHTML = timerCount;
+      start.addEventListener('click',(event) => {
+        start.disabled=true;
+        message.innerText = 'トイプードルを探して！';
+        cntStart();
+        timer2 = setInterval(function(){
+          cntStart();
+          question.innerHTML = `${a}問目`;
+          a+=1;
+        },3000);
+      })
+
+      // addEventListenerは複数のイベントを登録できる
+      // 別のイベントをつけるときは、removeEventListener で
+      // くっつけたイベントを取り外すことを忘れずに
+      canvas.addEventListener("click", (event) => {
+        // console.log({ x: event.layerX, y: event.layerY })
+        let xPosRange = ngImagePosition.x1 <= event.layerX && ngImagePosition.x2 >= event.layerX
+        let yPosRange = ngImagePosition.y1 <= event.layerY && ngImagePosition.y2 >= event.layerY 
+
+        if(xPosRange && yPosRange){
+          message.innerText = "正解！";
+        }else{
+          message.innerText = "ちがうよ！";
+        }
+      })
+
+    </script>
+  </body>
+</html>
